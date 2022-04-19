@@ -1,4 +1,12 @@
-
+/**
+* The HelloWorld program implements an application that
+* simply displays "Hello World!" to the standard output.
+* 
+* @class  CS-410 Databases
+* @authors  Zarek Sliwoski, Simon Arca Costas
+* @version 1.0
+* @since   4-18-2022 
+*/
 
 import java.util.Scanner;
 
@@ -7,6 +15,8 @@ public class Main {
 
     
     /** 
+     * Creates a new class for students
+     * 
      * @param args
      */
     public static void NewClass(String[] args){
@@ -15,6 +25,8 @@ public class Main {
 
     
     /** 
+     * List classes, with the # of students in each
+     * 
      * @param args
      */
     public static void ListClasses(String[] args){
@@ -23,6 +35,8 @@ public class Main {
 
     
     /** 
+     * Activate a class
+     * 
      * @param args
      */
     public static void SelectClass(String[] args){
@@ -31,6 +45,8 @@ public class Main {
     
     
     /** 
+     * Shows the currently-active class
+     * 
      * @param args
      */
     public static void ShowClass(String[] args){
@@ -38,7 +54,9 @@ public class Main {
     }
 
     
-    /** 
+    /**
+     * List the categories with their weights 
+     * 
      * @param args
      */
     public static void ShowCategories(String[] args){
@@ -47,6 +65,8 @@ public class Main {
 
     
     /** 
+     * Add a new category
+     * 
      * @param args
      */
     public static void AddCategory(String[] args){
@@ -55,6 +75,8 @@ public class Main {
 
     
     /** 
+     * List the assignments with their point values, grouped by category
+     * 
      * @param args
      */
     public static void ShowAssignment(String[] args){
@@ -63,6 +85,8 @@ public class Main {
     
     
     /** 
+     * Add a new assignment
+     * 
      * @param args
      */
     public static void AddAssignment(String[] args){
@@ -71,6 +95,8 @@ public class Main {
 
     
     /** 
+     * Adds a student and enrolls them in the current class
+     * 
      * @param args
      */
     public static void AddStudent(String[] args){
@@ -79,6 +105,8 @@ public class Main {
 
     
     /** 
+     * Show all students in the current class
+     * 
      * @param args
      */
     public static void ShowStudents(String[] args){
@@ -87,6 +115,9 @@ public class Main {
 
     
     /** 
+     * Assign the grade ‘grade’ for student with user name ‘username’ for assignment 
+     * ‘assignmentname’.
+     *  
      * @param args
      */
     public static void Grade(String[] args){
@@ -95,6 +126,9 @@ public class Main {
     
     
     /** 
+     * Show student’s current grade: all assignments, visually grouped by category, 
+     * with the student’s grade (if they have one).
+     * 
      * @param args
      */
     public static void StudentGrades(String[] args){
@@ -102,7 +136,9 @@ public class Main {
     }
 
     
-    /** 
+    /**
+     * Show the current class’s gradebook:
+     *  
      * @param args
      */
     public static void Gradebook(String[] args){
@@ -111,6 +147,7 @@ public class Main {
     
     
     /** 
+     * Handles direct input from our commandline
      * @param input
      */
     public static void HandleInput(String input){
