@@ -1,7 +1,9 @@
 /**
-* The HelloWorld program implements an application that
-* simply displays "Hello World!" to the standard output.
-* 
+* The final for CS-410 Databases
+*
+* A Java application for managing grades in a class.
+* It's used as a command shell application.
+*
 * @class  CS-410 Databases
 * @authors  Zarek Sliwoski, Simon Arca Costas
 * @version 1.0
