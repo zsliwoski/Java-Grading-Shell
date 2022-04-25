@@ -10,19 +10,105 @@
 * @since   4-18-2022 
 */
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.ResultSet;
+
 import java.util.Scanner;
 
 public class Main {
+    static String currentClass = "";
     static boolean exit = false;
 
+	public static Connection makeConnection() {
+		try {
+			Connection conn = null;
+			conn = DriverManager.getConnection(
+					"jdbc:mysql://localhost:5800/test?verifyServerCertificate=false&useSSL=true", "msandbox",
+					"brat2brat2XX77");
+			// Do something with the Connection
+			System.out.println("Database [test db] connection succeeded!");
+			System.out.println();
+			return conn;
+		} catch (SQLException ex) {
+			// handle any errors
+			System.err.println("SQLException: " + ex.getMessage());
+			System.err.println("SQLState: " + ex.getSQLState());
+			System.err.println("VendorError: " + ex.getErrorCode());
+		}
+		return null;
+	}
+
     
+	public static void runQuery(Connection conn) {
+
+		Statement stmt = null;
+		ResultSet rs = null;
+
+		try {
+			stmt = conn.createStatement();
+			rs = stmt.executeQuery("SELECT * FROM Persons");
+
+			// Now do something with the ResultSet ....
+			boolean rowsLeft = true;
+			rs.first();
+			while (rowsLeft) {
+				System.out.println(rs.getInt(1) + ":" + rs.getString(2) + ":" + rs.getString(3) + ":" + rs.getString(4)
+						+ ":" + rs.getString(5));
+				rowsLeft = rs.next();
+			}
+		} catch (SQLException ex) {
+			// handle any errors
+			System.err.println("SQLException: " + ex.getMessage());
+			System.err.println("SQLState: " + ex.getSQLState());
+			System.err.println("VendorError: " + ex.getErrorCode());
+		} finally {
+			// it is a good idea to release resources in a finally{} block
+			// in reverse-order of their creation if they are no-longer needed
+			if (rs != null) {
+				try {
+					rs.close();
+				} catch (SQLException sqlEx) {
+				} // ignore
+				rs = null;
+			}
+			if (stmt != null) {
+				try {
+					stmt.close();
+				} catch (SQLException sqlEx) {
+				} // ignore
+				stmt = null;
+			}
+		}
+	}
+
     /** 
      * Creates a new class for students
      * 
      * @param args
      */
     public static void NewClass(String[] args){
+        int op = args.length;
+        for (String string : args) {
+            System.out.println(string);
+        }
+        switch(op){
+            case 5:
+                try{
+                    Connection conn = makeConnection();
 
+                    conn.close();
+                } catch (Exception ex) {
+                    System.out.println(ex);
+                }
+                break;
+            default: 
+                System.out.println("Error : Invalid Parameters");
+                return;
+        }
+        System.out.println(args[1]);
     }
 
     
@@ -32,7 +118,17 @@ public class Main {
      * @param args
      */
     public static void ListClasses(String[] args){
+        int op = args.length;
 
+        switch(op){
+            case 1:
+                break;
+            default: 
+                System.out.println("Error : Invalid Parameters");
+                return;
+        }
+
+        System.out.println(args[0]);
     }
 
     
@@ -42,7 +138,28 @@ public class Main {
      * @param args
      */
     public static void SelectClass(String[] args){
+        int op = args.length;
 
+        switch(op){
+            case 2:
+                for (String string : args) {
+                    System.out.println(string);
+                }
+                break;
+            case 3:
+                for (String string : args) {
+                    System.out.println(string);
+                }
+                break;
+            case 4:
+                for (String string : args) {
+                    System.out.println(string);
+                }
+                break;
+            default: 
+                System.out.println("Error : Invalid Parameters");
+                return;
+        }
     }
     
     
@@ -52,7 +169,20 @@ public class Main {
      * @param args
      */
     public static void ShowClass(String[] args){
+        int op = args.length;
 
+        switch(op){
+            case 1:
+                for (String string : args) {
+                    System.out.println(string);
+                }
+                break;
+            default: 
+                System.out.println("Error : Invalid Parameters");
+                return;
+        }
+
+        System.out.println(args[0]);
     }
 
     
@@ -62,7 +192,20 @@ public class Main {
      * @param args
      */
     public static void ShowCategories(String[] args){
+        int op = args.length;
 
+        switch(op){
+            case 1:
+                for (String string : args) {
+                    System.out.println(string);
+                }
+                break;
+            default: 
+                System.out.println("Error : Invalid Parameters");
+                return;
+        }
+
+        System.out.println(args[0]);
     }
 
     
@@ -72,7 +215,20 @@ public class Main {
      * @param args
      */
     public static void AddCategory(String[] args){
+        int op = args.length;
 
+        switch(op){
+            case 3:
+                for (String string : args) {
+                    System.out.println(string);
+                }        
+                break;
+            default: 
+                System.out.println("Error : Invalid Parameters");
+                return;
+        }
+
+        System.out.println(args[0]);
     }
 
     
@@ -82,7 +238,20 @@ public class Main {
      * @param args
      */
     public static void ShowAssignment(String[] args){
+        int op = args.length;
 
+        switch(op){
+            case 1:
+                for (String string : args) {
+                    System.out.println(string);
+                }
+                break;
+            default: 
+                System.out.println("Error : Invalid Parameters");
+                return;
+        }
+
+        System.out.println(args[0]);
     }
     
     
@@ -92,7 +261,20 @@ public class Main {
      * @param args
      */
     public static void AddAssignment(String[] args){
+        int op = args.length;
 
+        switch(op){
+            case 5:
+                for (String string : args) {
+                    System.out.println(string);
+                }
+                break;
+            default: 
+                System.out.println("Error : Invalid Parameters");
+                return;
+        }
+
+        System.out.println(args[0]);
     }
 
     
@@ -102,7 +284,25 @@ public class Main {
      * @param args
      */
     public static void AddStudent(String[] args){
+        int op = args.length;
 
+        switch(op){
+            case 5:
+                for (String string : args) {
+                    System.out.println(string);
+                }
+                break;            
+            case 2:
+                for (String string : args) {
+                    System.out.println(string);
+                }
+                break;
+            default: 
+                System.out.println("Error : Invalid Parameters");
+                return;
+        }
+
+        System.out.println(args[0]);
     }
 
     
@@ -112,7 +312,25 @@ public class Main {
      * @param args
      */
     public static void ShowStudents(String[] args){
+        int op = args.length;
 
+        switch(op){
+            case 1:
+                for (String string : args) {
+                    System.out.println(string);
+                }
+                break;
+            case 2:
+                for (String string : args) {
+                    System.out.println(string);
+                }
+                break;             
+            default: 
+                System.out.println("Error : Invalid Parameters");
+                return;
+        }
+
+        System.out.println(args[0]);
     }
 
     
@@ -123,7 +341,20 @@ public class Main {
      * @param args
      */
     public static void Grade(String[] args){
+        int op = args.length;
 
+        switch(op){
+            case 4:
+                for (String string : args) {
+                    System.out.println(string);
+                }
+                break;             
+            default: 
+                System.out.println("Error : Invalid Parameters");
+                return;
+        }
+
+        System.out.println(args[0]);
     }
     
     
@@ -134,7 +365,20 @@ public class Main {
      * @param args
      */
     public static void StudentGrades(String[] args){
+        int op = args.length;
 
+        switch(op){
+            case 2:
+                for (String string : args) {
+                    System.out.println(string);
+                }
+                break;             
+            default: 
+                System.out.println("Error : Invalid Parameters");
+                return;
+        }
+
+        System.out.println(args[0]);
     }
 
     
@@ -144,7 +388,18 @@ public class Main {
      * @param args
      */
     public static void Gradebook(String[] args){
+        int op = args.length;
 
+        switch(op){
+            case 1:
+                for (String string : args) {
+                    System.out.println(string);
+                }
+                break;           
+            default: 
+                System.out.println("Error : Invalid Parameters");
+                return;
+        }
     }
     
     
@@ -156,7 +411,6 @@ public class Main {
 
         String[] args = input.split(" ", 5);
         String command = args[0];
-        System.out.println(command);
         switch(command){
             case "exit":
                 exit = true;
