@@ -27,8 +27,8 @@ public class Main {
         try {
             Connection conn = null;
             conn = DriverManager.getConnection(
-                    "jdbc:mysql://localhost:3306/mydb?useSSL=false", "root",
-                    "admin");
+                    "jdbc:mysql://localhost:3306/school_db?useSSL=false", "student",
+                    "user");
             // Do something with the Connection
             System.out.println("Database [test db] connection succeeded!");
             System.out.println();
@@ -42,7 +42,7 @@ public class Main {
         return null;
     }
 
-    public static void runQuery(Connection conn) {
+    public static ResultSet runQuery(Connection conn, String statement) {
 
         Statement stmt = null;
         ResultSet rs = null;
@@ -51,14 +51,6 @@ public class Main {
             stmt = conn.createStatement();
             rs = stmt.executeQuery("SELECT * FROM Persons");
 
-            // Now do something with the ResultSet ....
-            boolean rowsLeft = true;
-            rs.first();
-            while (rowsLeft) {
-                System.out.println(rs.getInt(1) + ":" + rs.getString(2) + ":" + rs.getString(3) + ":" + rs.getString(4)
-                        + ":" + rs.getString(5));
-                rowsLeft = rs.next();
-            }
         } catch (SQLException ex) {
             // handle any errors
             System.err.println("SQLException: " + ex.getMessage());
@@ -82,6 +74,7 @@ public class Main {
                 stmt = null;
             }
         }
+        return rs;
     }
 
     /**
@@ -97,9 +90,11 @@ public class Main {
         switch (op) {
             case 5:
                 try {
-                    Connection conn = makeConnection();
 
-                    conn.close();
+                    Connection conn = makeConnection();
+                    ResultSet res = runQuery(conn,
+                            "INSERT INTO class (course_number, term, section_number, description) VALUES('course_number', 'term', 1, 'description');");
+                    res.conn.close();
                 } catch (Exception ex) {
                     System.out.println(ex);
                 }
