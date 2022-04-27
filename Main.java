@@ -42,14 +42,14 @@ public class Main {
         return null;
     }
 
-    public static ResultSet runQuery(Connection conn, String statement) {
+    public static boolean runStatement(Connection conn, String statement) {
 
         Statement stmt = null;
-        ResultSet rs = null;
+        boolean rs = false;
 
         try {
             stmt = conn.createStatement();
-            rs = stmt.executeQuery("SELECT * FROM Persons");
+            rs = stmt.execute(statement);
 
         } catch (SQLException ex) {
             // handle any errors
@@ -58,14 +58,34 @@ public class Main {
             System.err.println("VendorError: " + ex.getErrorCode());
         } finally {
             // it is a good idea to release resources in a finally{} block
-            // in reverse-order of their creation if they are no-longer needed
-            if (rs != null) {
+            if (stmt != null) {
                 try {
-                    rs.close();
+                    stmt.close();
                 } catch (SQLException sqlEx) {
                 } // ignore
-                rs = null;
+                stmt = null;
             }
+        }
+        return rs;
+    }
+
+    public static ResultSet runQuery(Connection conn, String statement) {
+
+        Statement stmt = null;
+        ResultSet rs = null;
+
+        try {
+            stmt = conn.createStatement();
+            rs = stmt.executeQuery(statement);
+            return rs;
+        } catch (SQLException ex) {
+            // handle any errors
+            System.err.println("SQLException: " + ex.getMessage());
+            System.err.println("SQLState: " + ex.getSQLState());
+            System.err.println("VendorError: " + ex.getErrorCode());
+        } finally {
+            // it is a good idea to release resources in a finally{} block
+
             if (stmt != null) {
                 try {
                     stmt.close();
@@ -90,11 +110,12 @@ public class Main {
         switch (op) {
             case 5:
                 try {
-
+                    String query = "INSERT INTO class (course_number, term, section_number, description) VALUES('course_number', 'term', 1, 'description');";
                     Connection conn = makeConnection();
-                    ResultSet res = runQuery(conn,
-                            "INSERT INTO class (course_number, term, section_number, description) VALUES('course_number', 'term', 1, 'description');");
-                    res.conn.close();
+                    boolean res = runStatement(conn,
+                            query);
+                    System.out.println(res);
+                    conn.close();
                 } catch (Exception ex) {
                     System.out.println(ex);
                 }
@@ -116,6 +137,26 @@ public class Main {
 
         switch (op) {
             case 1:
+                ResultSet res = null;
+                try {
+                    String query = "SELECT * FROM class;";
+                    Connection conn = makeConnection();
+                    res = runQuery(conn,
+                            query);
+
+                    // Now do something with the ResultSet ....
+                    boolean rowsLeft = true;
+
+                    res.first();
+                    while (rowsLeft) {
+                        System.out.println(res);
+                        rowsLeft = res.next();
+                    }
+                    res.close();
+                    conn.close();
+                } catch (Exception ex) {
+                    System.out.println(ex);
+                }
                 break;
             default:
                 System.out.println("Error : Invalid Parameters");
@@ -208,9 +249,19 @@ public class Main {
         int op = args.length;
 
         switch (op) {
-            case 3:
+            case 4:
                 for (String string : args) {
                     System.out.println(string);
+                }
+                try {
+                    String query = "INSERT INTO category (name, weight, class_id) VALUES('name', 0.5, 2);";
+                    Connection conn = makeConnection();
+                    boolean res = runStatement(conn,
+                            query);
+                    System.out.println(res);
+                    conn.close();
+                } catch (Exception ex) {
+                    System.out.println(ex);
                 }
                 break;
             default:
@@ -252,9 +303,19 @@ public class Main {
         int op = args.length;
 
         switch (op) {
-            case 5:
+            case 7:
                 for (String string : args) {
                     System.out.println(string);
+                }
+                try {
+                    String query = "INSERT INTO assignment (class_id, category_id, name, description, point_value) VALUES(2, 1, 'name', 'description', 20);";
+                    Connection conn = makeConnection();
+                    boolean res = runStatement(conn,
+                            query);
+                    System.out.println(res);
+                    conn.close();
+                } catch (Exception ex) {
+                    System.out.println(ex);
                 }
                 break;
             default:
