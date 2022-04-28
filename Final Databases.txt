@@ -1,0 +1,218 @@
+﻿assignment
+assignment_id, category_id, name, description, point_value
+assignment_grade
+assignment_grade_id, student_id, assignment_id, points_awarded
+category
+category_id, name, weight, class_id
+class
+class_id, course_number, term, section_number, description
+class_enrollment
+class_enrollment_id, student_id, class_id
+student
+student_id, first_name, last_name, username
+
+
+modify table assignment_grade
+CREATE TABLE IF NOT EXISTS `school_db`.`assignment_grade` (
+  `assignment_grade_id` INT NOT NULL AUTO_INCREMENT,
+  `student_id` INT NOT NULL,
+  `assignment_id` INT NOT NULL,
+  `points_awarded` INT NOT NULL,
+  PRIMARY KEY (`assignment_grade_id`),
+  UNIQUE INDEX `idassignment_grade_UNIQUE` (`assignment_grade_id` ASC) VISIBLE,
+  INDEX `student_idx` (`student_id` ASC) VISIBLE,
+  INDEX `assignment_idx` (`assignment_id` ASC) VISIBLE,
+  UNIQUE(student_id,assignment_id),
+  CONSTRAINT `graded_student`
+    FOREIGN KEY (`student_id`)
+    REFERENCES `school_db`.`student` (`student_id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `graded_assignment`
+    FOREIGN KEY (`assignment_id`)
+    REFERENCES `school_db`.`assignment` (`assignment_id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+modify table student
+CREATE TABLE IF NOT EXISTS `school_db`.`student` (
+  `student_id` INT NOT NULL,
+  `first_name` VARCHAR(45) NOT NULL,
+  `last_name` VARCHAR(45) NOT NULL,
+  `username` VARCHAR(45) NOT NULL,
+  PRIMARY KEY (`student_id`),
+  UNIQUE INDEX `user_id_UNIQUE` (`student_id` ASC) VISIBLE,
+  UNIQUE INDEX `username_UNIQUE` (`username` ASC) VISIBLE)
+ENGINE = InnoDB;
+
+
+modify table class_enrollment
+CREATE TABLE IF NOT EXISTS `school_db`.`class_enrollment` (
+  `class_enrollment_id` INT NOT NULL AUTO_INCREMENT,
+  `student_id` INT NOT NULL,
+  `class_id` INT NOT NULL,
+  PRIMARY KEY (`class_enrollment_id`),
+  UNIQUE INDEX `class_enrollment_id_UNIQUE` (`class_enrollment_id` ASC) VISIBLE,
+  UNIQUE (student_id,class_id),
+  CONSTRAINT `enrollment_student`
+    FOREIGN KEY (`student_id`)
+    REFERENCES `school_db`.`student` (`student_id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `enrollment_class`
+    FOREIGN KEY (`class_id`)
+    REFERENCES `school_db`.`class` (`class_id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+modify table assignments
+
+
+CREATE TABLE IF NOT EXISTS `school_db`.`assignment` (
+  `assignment_id` INT NOT NULL AUTO_INCREMENT,
+  `category_id` INT NOT NULL,
+  `name` VARCHAR(45) NOT NULL,
+  `description` VARCHAR(45) NULL,
+  `point_value` INT NOT NULL,
+  PRIMARY KEY (`assignment_id`),
+  UNIQUE INDEX `assignment_id_UNIQUE` (`assignment_id` ASC) VISIBLE,
+  UNIQUE (name,category_id),
+  INDEX `category_idx` (`category_id` ASC) VISIBLE,
+  CONSTRAINT `assignment_category`
+    FOREIGN KEY (`category_id`)
+    REFERENCES `school_db`.`category` (`category_id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+
+
+
+
+list-classes
+select count(class_enrollment.student_id), class.course_number,class.term,class.section_number
+from class_enrollment
+right join class on class_enrollment.class_id = class.class_id
+group by class_enrollment.class_id,class.course_number,class.term,class.section_number
+
+
+select-class CS410
+select count(*) from class where course_number= "CS410"
+
+
+(if output equal 1 then select * from class where course_number= "CS410"
+if not then fails)
+
+
+select-class CS410 Sp2
+select count(*) from class where course_number= "CS410 "and term = "Sp20"
+
+
+(if output equal 1 then select * from class where course_number= "CS410" and term = "Sp20"
+if not then fails
+
+
+select-class CS410 Sp20 
+select * from class 
+where course_number= "CS410"
+and term = "Sp20"
+and section_number = 1
+
+
+show-class (show the class selected before, we should return the
+class_id
+
+
+show-categories
+select * from category where class_id = 
+
+
+add-category Name weight
+insert into category (name, weight, class_id) values ("Project",50,2)
+
+
+show-assignment
+select category.name as category, assignment.name,assignment.description,assignment.point_value from assignment,category
+where category.category_id=assignment.category_id
+and category.class_id = 1
+group by assignment.name,description,point_value,category.name
+
+
+add- assignment name Category Description points
+
+
+insert into assignment 
+set name = "hm3", 
+description = "Page 300", 
+point_value= 100,
+category_id = (select category_id from category
+where name = "homework"
+and class_id = 1)
+
+
+add-student username studentid Last First
+insert into student (username,student_id,first_name,last_name) values ("simonarca",1,"simon","arca")
+if this fails then we check if the name is the same
+select * from student where student_id = 1
+we compare the results and if the results are not the same
+UPDATE student
+SET first_name = "simon", last_name = "arca", username = "simonarca"
+WHERE student_id = 1
+print a warning
+and then enroll them in the class
+insert into class_enrollment (student_id,class_id) values (1,3)
+
+
+add-student username
+
+
+insert into class_enrollment
+set class_id = 1,
+student_id = (select student_id from student where username = "username")
+
+
+show-students
+select username,first_name,last_name from student
+inner join class_enrollment on student.student_id = class_enrollment.student_id
+and class_enrollment.class_id = 1
+
+
+show-students string
+select username,first_name,last_name from student
+inner join class_enrollment on student.student_id = class_enrollment.student_id
+and class_enrollment.class_id = 1
+where first_name like '%string%'
+or username like '%string%'
+or last_name like '%string%'
+
+
+
+
+grade assignmentname username grade
+
+
+(we check if the student is enroll in that class)
+select count(*) from student,class_enrollment where
+username = "username"
+and student.student_id = class_enrollment.student_id 
+and class_id = 1
+
+
+(if he is enrolled)
+insert into assignment_grade
+set points_awarded = 100,
+student_id = (select student_id from student where username = "simonarca"),
+assignment_id = (select assignment.assignment_id from assignment,category where category.category_id=assignment.category_id
+and category.class_id = 1
+and assignment.name = "hm1")
+
+
+(return the point of the assignment to check if the points_awared are not more)
+select point_value from assignment,category where category.category_id=assignment.category_id
+and category.class_id = 1
+and assignment.name = "Project 1"
