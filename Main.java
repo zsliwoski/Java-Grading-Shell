@@ -38,6 +38,7 @@ public class Main {
             // Do something with the Connection
             System.out.println("[CONNECTION SUCCEEDED]");
             System.out.println("_______________________");
+            System.out.println();
             return conn;
         } catch (SQLException ex) {
             // handle any errors
@@ -105,9 +106,11 @@ public class Main {
 
                     ResultSet res = stmt.executeQuery(query);// pstmt.execute();
 
+                    System.out.println("| # Enrolled | Course # | Term | Section # |");
                     while (res.next()) {
                         System.out.println(
-                                res.getInt(1) + " " + res.getString(2) + " " + res.getString(3) + " " + res.getInt(4));
+                                "| " + res.getInt(1) + " | " + res.getString(2) + " | " + res.getString(3) + " | "
+                                        + res.getInt(4) + " |");
                     }
 
                     res.close();
@@ -156,7 +159,7 @@ public class Main {
                     res.first();
                     currentClass = res.getInt(1);
 
-                    System.out.println("Selected class of ID:" + currentClass);
+                    System.out.println("Selected class with ID: " + currentClass);
 
                     res.close();
                     conn.close();
@@ -257,11 +260,9 @@ public class Main {
      */
     public static void AddCategory(String[] args) {
         int op = args.length;
-        for (String string : args) {
-            System.out.println(string);
-        }
+
         switch (op) {
-            case 4:
+            case 3:
                 try {
                     String query = "insert into category (name, weight, class_id) values (?, ?, ?);";
 
@@ -334,19 +335,18 @@ public class Main {
      */
     public static void AddAssignment(String[] args) {
         int op = args.length;
-
         switch (op) {
-            case 7:
+            case 5:
                 try {
-                    String query = "INSERT INTO assignment (class_id, category_id, name, description, point_value) VALUES(?, ?, ?, ?, ?);";
+                    String query = "INSERT INTO assignment (category_id, name, description, point_value) VALUES((SELECT category_id FROM category WHERE name = ? LIMIT 1), ?, ?, ?);";
                     Connection conn = makeConnection();
 
                     PreparedStatement pstmt = conn.prepareStatement(query);
-                    pstmt.setInt(1, currentClass);
-                    pstmt.setInt(2, Integer.parseInt(args[1]));
-                    pstmt.setString(3, args[2]);
-                    pstmt.setString(4, args[3]);
-                    pstmt.setInt(5, Integer.parseInt(args[4]));
+                    // pstmt.setInt(1, currentClass);
+                    pstmt.setString(1, args[2]);
+                    pstmt.setString(2, args[1]);
+                    pstmt.setString(3, args[3]);
+                    pstmt.setInt(4, Integer.parseInt(args[4]));
 
                     boolean ran = pstmt.execute();
                     System.out.println("Inserted 1 record");
@@ -468,10 +468,10 @@ public class Main {
         switch (op) {
             case 4:
                 try {
-                    String query = "select count(*) from student,class_enrollment where" +
-                            "username = ?" +
-                            "and student.student_id = class_enrollment.student_id" +
-                            "and class_id = ?";
+                    String query = "select count(*) from student,class_enrollment where " +
+                            "username = ? " +
+                            "and student.student_id = class_enrollment.student_id " +
+                            "and class_id = ?;";
 
                     Connection conn = makeConnection();
                     PreparedStatement pstmt = conn.prepareStatement(query);
@@ -489,12 +489,12 @@ public class Main {
                     conn.close();
 
                     if (studentCount == 1) {
-                        query = "insert into assignment_grade" +
+                        query = "insert into assignment_grade " +
                                 "set points_awarded = ?, " +
-                                "student_id = (select student_id from student where username = ?)," +
-                                "assignment_id = (select assignment.assignment_id from assignment,category where category.category_id=assignment.category_id"
+                                "student_id = (select student_id from student where username = ?), " +
+                                "assignment_id = (select assignment.assignment_id from assignment,category where category.category_id=assignment.category_id "
                                 +
-                                "and category.class_id = ?" +
+                                "and category.class_id = ? " +
                                 "and assignment.name = ?);";
 
                         conn = makeConnection();
@@ -510,9 +510,9 @@ public class Main {
                         conn.close();
 
                         // Checking to make sure we didn't award too many points
-                        query = "select point_value from assignment,category where category.category_id=assignment.category_id"
+                        query = "select point_value from assignment,category where category.category_id=assignment.category_id "
                                 +
-                                "and category.class_id = ?" +
+                                "and category.class_id = ? " +
                                 "and assignment.name = ?;";
 
                         conn = makeConnection();
@@ -576,8 +576,30 @@ public class Main {
 
         switch (op) {
             case 1:
-                for (String string : args) {
-                    System.out.println(string);
+                try {
+                    String query = "select sum(number) as total from (select (sum(assignment_grade.points_awarded)/ sum(assignment.point_value)*category.weight) as number "
+                            +
+                            "from assignment_grade,assignment,category " +
+                            "where assignment.category_id = category.category_id " +
+                            "and assignment.assignment_id = assignment_grade.assignment_id " +
+                            "and category.class_id = ? " +
+                            "group by assignment_grade.student_id, assignment_grade.points_awarded, assignment.point_value, category.weight) n";
+
+                    Connection conn = makeConnection();
+                    PreparedStatement pstmt = conn.prepareStatement(query);
+                    pstmt.setInt(1, currentClass);
+                    ResultSet res = pstmt.executeQuery();// pstmt.execute();
+
+                    System.out.println("| Total % |");
+                    while (res.next()) {
+                        System.out.println(
+                                "| " + res.getString("total") + " |");
+                    }
+
+                    res.close();
+                    conn.close();
+                } catch (Exception ex) {
+                    System.out.println(ex);
                 }
                 break;
             default:
