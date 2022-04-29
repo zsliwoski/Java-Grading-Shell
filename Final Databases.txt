@@ -216,3 +216,33 @@ and assignment.name = "hm1")
 select point_value from assignment,category where category.category_id=assignment.category_id
 and category.class_id = 1
 and assignment.name = "Project 1"
+
+Grade Reporting
+● student-grades username
+First we rescale category weights so they sum to 100
+
+set @Total=(select sum(weight) from category where class_id = 3);
+update category 
+set weight = 100*weight/@Total
+where class_id = 3
+
+gradebook
+// This show the total %
+select sum(number) from (select sum(assignment_grade.points_awarded)/ sum(assignment.point_value)*category.weight as number
+from assignment_grade,assignment,category
+where assignment.category_id = category.category_id 
+and assignment.assignment_id = assignment_grade.assignment_id 
+and category.class_id = 1
+group by assignment_grade.student_id,assignment_grade.points_awarded,assignment.point_value,category.weight) n
+
+
+/// grades in each assignment
+select student.username, student.student_id,student.first_name,student.last_name, assignment.name,assignment_grade.points_awarded, assignment.point_value
+from assignment 
+right join assignment_grade on assignment.assignment_id = assignment_grade.assignment_id 
+left outer join student on student.student_id = assignment_grade.student_id
+left join category on assignment.category_id = category.category_id 
+and category.class_id = 1
+group by assignment_grade.student_id,assignment_grade.points_awarded,assignment.point_value,category.weight,assignment.name,student.username, student.student_id,student.first_name,student.last_name
+
+
