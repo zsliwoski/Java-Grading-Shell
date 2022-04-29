@@ -14,15 +14,21 @@
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.sql.ResultSet;
 
 import java.util.Scanner;
 
 public class Main {
-    static String currentClass = "";
+    static int currentClass = -1;
     static boolean exit = false;
 
+    /**
+     * Creates a connection to our database
+     * 
+     * @returns Connection to database
+     */
     public static Connection makeConnection() {
         try {
             Connection conn = null;
@@ -30,8 +36,8 @@ public class Main {
                     "jdbc:mysql://localhost:3306/school_db?useSSL=false", "student",
                     "user");
             // Do something with the Connection
-            System.out.println("Database [test db] connection succeeded!");
-            System.out.println();
+            System.out.println("[CONNECTION SUCCEEDED]");
+            System.out.println("_______________________");
             return conn;
         } catch (SQLException ex) {
             // handle any errors
@@ -42,61 +48,6 @@ public class Main {
         return null;
     }
 
-    public static boolean runStatement(Connection conn, String statement) {
-
-        Statement stmt = null;
-        boolean rs = false;
-
-        try {
-            stmt = conn.createStatement();
-            rs = stmt.execute(statement);
-
-        } catch (SQLException ex) {
-            // handle any errors
-            System.err.println("SQLException: " + ex.getMessage());
-            System.err.println("SQLState: " + ex.getSQLState());
-            System.err.println("VendorError: " + ex.getErrorCode());
-        } finally {
-            // it is a good idea to release resources in a finally{} block
-            if (stmt != null) {
-                try {
-                    stmt.close();
-                } catch (SQLException sqlEx) {
-                } // ignore
-                stmt = null;
-            }
-        }
-        return rs;
-    }
-
-    public static ResultSet runQuery(Connection conn, String statement) {
-
-        Statement stmt = null;
-        ResultSet rs = null;
-
-        try {
-            stmt = conn.createStatement();
-            rs = stmt.executeQuery(statement);
-            return rs;
-        } catch (SQLException ex) {
-            // handle any errors
-            System.err.println("SQLException: " + ex.getMessage());
-            System.err.println("SQLState: " + ex.getSQLState());
-            System.err.println("VendorError: " + ex.getErrorCode());
-        } finally {
-            // it is a good idea to release resources in a finally{} block
-
-            if (stmt != null) {
-                try {
-                    stmt.close();
-                } catch (SQLException sqlEx) {
-                } // ignore
-                stmt = null;
-            }
-        }
-        return rs;
-    }
-
     /**
      * Creates a new class for students
      * 
@@ -104,17 +55,22 @@ public class Main {
      */
     public static void NewClass(String[] args) {
         int op = args.length;
-        for (String string : args) {
-            System.out.println(string);
-        }
+
         switch (op) {
             case 5:
                 try {
-                    String query = "INSERT INTO class (course_number, term, section_number, description) VALUES('course_number', 'term', 1, 'description');";
+                    String query = "INSERT INTO class (course_number, term, section_number, description) VALUES(?, ?, ?, ?);";
+
                     Connection conn = makeConnection();
-                    boolean res = runStatement(conn,
-                            query);
-                    System.out.println(res);
+
+                    PreparedStatement pstmt = conn.prepareStatement(query);
+                    pstmt.setString(1, args[1]);
+                    pstmt.setString(2, args[2]);
+                    pstmt.setInt(3, Integer.parseInt(args[3]));
+                    pstmt.setString(4, args[4]);
+
+                    boolean ran = pstmt.execute();
+                    System.out.println("Inserted 1 record");
                     conn.close();
                 } catch (Exception ex) {
                     System.out.println(ex);
@@ -124,7 +80,6 @@ public class Main {
                 System.out.println("Error : Invalid Parameters");
                 return;
         }
-        System.out.println(args[1]);
     }
 
     /**
@@ -137,21 +92,24 @@ public class Main {
 
         switch (op) {
             case 1:
-                ResultSet res = null;
                 try {
-                    String query = "SELECT * FROM class;";
+                    String query = "select count(class_enrollment.student_id), class.course_number,class.term,class.section_number "
+                            +
+                            "from class_enrollment " +
+                            "right join class on class_enrollment.class_id = class.class_id " +
+                            "group by class_enrollment.class_id,class.course_number,class.term,class.section_number;";
+
                     Connection conn = makeConnection();
-                    res = runQuery(conn,
-                            query);
+                    Statement stmt = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,
+                            ResultSet.CONCUR_READ_ONLY);
 
-                    // Now do something with the ResultSet ....
-                    boolean rowsLeft = true;
+                    ResultSet res = stmt.executeQuery(query);// pstmt.execute();
 
-                    res.first();
-                    while (rowsLeft) {
-                        System.out.println(res);
-                        rowsLeft = res.next();
+                    while (res.next()) {
+                        System.out.println(
+                                res.getInt(1) + " " + res.getString(2) + " " + res.getString(3) + " " + res.getInt(4));
                     }
+
                     res.close();
                     conn.close();
                 } catch (Exception ex) {
@@ -162,8 +120,6 @@ public class Main {
                 System.out.println("Error : Invalid Parameters");
                 return;
         }
-
-        System.out.println(args[0]);
     }
 
     /**
@@ -176,9 +132,6 @@ public class Main {
 
         switch (op) {
             case 2:
-                for (String string : args) {
-                    System.out.println(string);
-                }
                 break;
             case 3:
                 for (String string : args) {
@@ -186,8 +139,29 @@ public class Main {
                 }
                 break;
             case 4:
-                for (String string : args) {
-                    System.out.println(string);
+                try {
+                    String query = "SELECT class_id FROM class WHERE course_number = ? AND term = ? AND section_number = ?";
+
+                    Connection conn = makeConnection();
+
+                    PreparedStatement pstmt = conn.prepareStatement(query, ResultSet.TYPE_SCROLL_INSENSITIVE,
+                            ResultSet.CONCUR_READ_ONLY);
+
+                    pstmt.setString(1, args[1]);
+                    pstmt.setString(2, args[2]);
+                    pstmt.setInt(3, Integer.parseInt(args[3]));
+
+                    ResultSet res = pstmt.executeQuery();// pstmt.execute();
+
+                    res.first();
+                    currentClass = res.getInt(1);
+
+                    System.out.println("Selected class of ID:" + currentClass);
+
+                    res.close();
+                    conn.close();
+                } catch (Exception ex) {
+                    System.out.println(ex);
                 }
                 break;
             default:
@@ -206,16 +180,37 @@ public class Main {
 
         switch (op) {
             case 1:
-                for (String string : args) {
-                    System.out.println(string);
+                try {
+                    String query = "select count(class_enrollment.student_id), class.course_number,class.term,class.section_number "
+                            +
+                            "from class_enrollment " +
+                            "right join class on class_enrollment.class_id = class.class_id " +
+                            "group by class_enrollment.class_id,class.course_number,class.term,class.section_number HAVING class_id = ?;";
+
+                    Connection conn = makeConnection();
+                    PreparedStatement pstmt = conn.prepareStatement(query);
+                    pstmt.setInt(1, currentClass);
+
+                    ResultSet res = pstmt.executeQuery();// pstmt.execute();
+
+                    System.out.println("| # Enrolled | Course # | Term | Section # |");
+
+                    while (res.next()) {
+                        System.out.println(
+                                "| " + res.getInt(1) + " | " + res.getString(2) + " | " + res.getString(3) + " | "
+                                        + res.getInt(4) + " |");
+                    }
+
+                    res.close();
+                    conn.close();
+                } catch (Exception ex) {
+                    System.out.println(ex);
                 }
                 break;
             default:
                 System.out.println("Error : Invalid Parameters");
                 return;
         }
-
-        System.out.println(args[0]);
     }
 
     /**
@@ -228,37 +223,22 @@ public class Main {
 
         switch (op) {
             case 1:
-                for (String string : args) {
-                    System.out.println(string);
-                }
-                break;
-            default:
-                System.out.println("Error : Invalid Parameters");
-                return;
-        }
-
-        System.out.println(args[0]);
-    }
-
-    /**
-     * Add a new category
-     * 
-     * @param args
-     */
-    public static void AddCategory(String[] args) {
-        int op = args.length;
-
-        switch (op) {
-            case 4:
-                for (String string : args) {
-                    System.out.println(string);
-                }
                 try {
-                    String query = "INSERT INTO category (name, weight, class_id) VALUES('name', 0.5, 2);";
+                    String query = "select * from category where class_id = ?";
+
                     Connection conn = makeConnection();
-                    boolean res = runStatement(conn,
-                            query);
-                    System.out.println(res);
+                    PreparedStatement pstmt = conn.prepareStatement(query);
+                    pstmt.setInt(1, currentClass);
+
+                    ResultSet res = pstmt.executeQuery();// pstmt.execute();
+
+                    System.out.println("| Category Name | Grading Weight |");
+                    while (res.next()) {
+                        System.out.println(
+                                "| " + res.getString("name") + " | " + res.getFloat("weight") + " |");
+                    }
+
+                    res.close();
                     conn.close();
                 } catch (Exception ex) {
                     System.out.println(ex);
@@ -268,8 +248,41 @@ public class Main {
                 System.out.println("Error : Invalid Parameters");
                 return;
         }
+    }
 
-        System.out.println(args[0]);
+    /**
+     * Add a new category
+     * 
+     * @param args
+     */
+    public static void AddCategory(String[] args) {
+        int op = args.length;
+        for (String string : args) {
+            System.out.println(string);
+        }
+        switch (op) {
+            case 4:
+                try {
+                    String query = "insert into category (name, weight, class_id) values (?, ?, ?);";
+
+                    Connection conn = makeConnection();
+
+                    PreparedStatement pstmt = conn.prepareStatement(query);
+                    pstmt.setString(1, args[1]);
+                    pstmt.setFloat(2, Float.parseFloat(args[2]));
+                    pstmt.setInt(3, currentClass);
+
+                    boolean ran = pstmt.execute();
+                    System.out.println("Inserted 1 record");
+                    conn.close();
+                } catch (Exception ex) {
+                    System.out.println(ex);
+                }
+                break;
+            default:
+                System.out.println("Error : Invalid Parameters");
+                return;
+        }
     }
 
     /**
@@ -282,8 +295,29 @@ public class Main {
 
         switch (op) {
             case 1:
-                for (String string : args) {
-                    System.out.println(string);
+                try {
+                    String query = "select category.name as category, assignment.name,assignment.description,assignment.point_value from assignment,category "
+                            +
+                            "where category.category_id = assignment.category_id " +
+                            "and category.class_id = ? " +
+                            "group by assignment.name, description, point_value, category.name;";
+
+                    Connection conn = makeConnection();
+                    PreparedStatement pstmt = conn.prepareStatement(query);
+                    pstmt.setInt(1, currentClass);
+
+                    ResultSet res = pstmt.executeQuery();// pstmt.execute();
+
+                    System.out.println("| Assignment Name | Point Value |");
+                    while (res.next()) {
+                        System.out.println(
+                                "| " + res.getString("name") + " | " + res.getInt("point_value") + " |");
+                    }
+
+                    res.close();
+                    conn.close();
+                } catch (Exception ex) {
+                    System.out.println(ex);
                 }
                 break;
             default:
@@ -291,7 +325,6 @@ public class Main {
                 return;
         }
 
-        System.out.println(args[0]);
     }
 
     /**
@@ -304,15 +337,19 @@ public class Main {
 
         switch (op) {
             case 7:
-                for (String string : args) {
-                    System.out.println(string);
-                }
                 try {
-                    String query = "INSERT INTO assignment (class_id, category_id, name, description, point_value) VALUES(2, 1, 'name', 'description', 20);";
+                    String query = "INSERT INTO assignment (class_id, category_id, name, description, point_value) VALUES(?, ?, ?, ?, ?);";
                     Connection conn = makeConnection();
-                    boolean res = runStatement(conn,
-                            query);
-                    System.out.println(res);
+
+                    PreparedStatement pstmt = conn.prepareStatement(query);
+                    pstmt.setInt(1, currentClass);
+                    pstmt.setInt(2, Integer.parseInt(args[1]));
+                    pstmt.setString(3, args[2]);
+                    pstmt.setString(4, args[3]);
+                    pstmt.setInt(5, Integer.parseInt(args[4]));
+
+                    boolean ran = pstmt.execute();
+                    System.out.println("Inserted 1 record");
                     conn.close();
                 } catch (Exception ex) {
                     System.out.println(ex);
@@ -322,8 +359,6 @@ public class Main {
                 System.out.println("Error : Invalid Parameters");
                 return;
         }
-
-        System.out.println(args[0]);
     }
 
     /**
@@ -349,8 +384,6 @@ public class Main {
                 System.out.println("Error : Invalid Parameters");
                 return;
         }
-
-        System.out.println(args[0]);
     }
 
     /**
@@ -363,21 +396,64 @@ public class Main {
 
         switch (op) {
             case 1:
-                for (String string : args) {
-                    System.out.println(string);
+                try {
+                    String query = "select username,first_name,last_name from student " +
+                            "inner join class_enrollment on student.student_id = class_enrollment.student_id " +
+                            "and class_enrollment.class_id = ?";
+
+                    Connection conn = makeConnection();
+                    PreparedStatement pstmt = conn.prepareStatement(query);
+                    pstmt.setInt(1, currentClass);
+
+                    ResultSet res = pstmt.executeQuery();// pstmt.execute();
+
+                    System.out.println("| Username | First Name | Last Name |");
+                    while (res.next()) {
+                        System.out.println(
+                                "| " + res.getString("username") + " | " + res.getString("first_name") + " | "
+                                        + res.getString("last_name") + " |");
+                    }
+
+                    res.close();
+                    conn.close();
+                } catch (Exception ex) {
+                    System.out.println(ex);
                 }
                 break;
             case 2:
-                for (String string : args) {
-                    System.out.println(string);
+                try {
+                    String query = "select username,first_name,last_name from student " +
+                            "inner join class_enrollment on student.student_id = class_enrollment.student_id " +
+                            "and class_enrollment.class_id = ? " +
+                            "where first_name like ? " +
+                            "or username like ? " +
+                            "or last_name like ? ;";
+
+                    Connection conn = makeConnection();
+                    PreparedStatement pstmt = conn.prepareStatement(query);
+                    pstmt.setInt(1, currentClass);
+                    pstmt.setString(2, "%" + args[1] + "%");
+                    pstmt.setString(3, "%" + args[1] + "%");
+                    pstmt.setString(4, "%" + args[1] + "%");
+                    ResultSet res = pstmt.executeQuery();// pstmt.execute();
+
+                    System.out.println("| Username | First Name | Last Name |");
+                    while (res.next()) {
+                        System.out.println(
+                                "| " + res.getString("username") + " | " + res.getString("first_name") + " | "
+                                        + res.getString("last_name") + " |");
+                    }
+
+                    res.close();
+                    conn.close();
+                } catch (Exception ex) {
+                    System.out.println(ex);
                 }
                 break;
             default:
                 System.out.println("Error : Invalid Parameters");
                 return;
         }
-
-        System.out.println(args[0]);
     }
 
     /**
@@ -391,16 +467,82 @@ public class Main {
 
         switch (op) {
             case 4:
-                for (String string : args) {
-                    System.out.println(string);
+                try {
+                    String query = "select count(*) from student,class_enrollment where" +
+                            "username = ?" +
+                            "and student.student_id = class_enrollment.student_id" +
+                            "and class_id = ?";
+
+                    Connection conn = makeConnection();
+                    PreparedStatement pstmt = conn.prepareStatement(query);
+                    pstmt.setString(1, args[2]);
+                    pstmt.setInt(2, currentClass);
+                    ResultSet res = pstmt.executeQuery();// pstmt.execute();
+
+                    int studentCount = 0;
+
+                    while (res.next()) {
+                        studentCount += 1;
+                    }
+
+                    res.close();
+                    conn.close();
+
+                    if (studentCount == 1) {
+                        query = "insert into assignment_grade" +
+                                "set points_awarded = ?, " +
+                                "student_id = (select student_id from student where username = ?)," +
+                                "assignment_id = (select assignment.assignment_id from assignment,category where category.category_id=assignment.category_id"
+                                +
+                                "and category.class_id = ?" +
+                                "and assignment.name = ?);";
+
+                        conn = makeConnection();
+
+                        pstmt = conn.prepareStatement(query);
+                        pstmt.setInt(1, Integer.parseInt(args[3]));
+                        pstmt.setString(2, args[2]);
+                        pstmt.setInt(3, currentClass);
+                        pstmt.setString(4, args[1]);
+
+                        boolean ran = pstmt.execute();
+                        System.out.println("Inserted 1 record");
+                        conn.close();
+
+                        // Checking to make sure we didn't award too many points
+                        query = "select point_value from assignment,category where category.category_id=assignment.category_id"
+                                +
+                                "and category.class_id = ?" +
+                                "and assignment.name = ?;";
+
+                        conn = makeConnection();
+                        pstmt = conn.prepareStatement(query);
+                        pstmt.setString(1, args[2]);
+                        pstmt.setInt(2, currentClass);
+                        res = pstmt.executeQuery();// pstmt.execute();
+
+                        int pointCount = 0;
+
+                        while (res.next()) {
+                            studentCount += 1;
+                            pointCount = res.getInt("point_value");
+                        }
+
+                        res.close();
+                        conn.close();
+
+                        if (pointCount < Integer.parseInt(args[3])) {
+                            System.out.println("WARNING: Points awarded are greater than maximum assignment points.");
+                        }
+                    }
+                } catch (Exception ex) {
+                    System.out.println(ex);
                 }
                 break;
             default:
                 System.out.println("Error : Invalid Parameters");
                 return;
         }
-
-        System.out.println(args[0]);
     }
 
     /**
@@ -422,8 +564,6 @@ public class Main {
                 System.out.println("Error : Invalid Parameters");
                 return;
         }
-
-        System.out.println(args[0]);
     }
 
     /**
