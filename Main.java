@@ -338,7 +338,7 @@ public class Main {
         switch (op) {
             case 5:
                 try {
-                    String query = "INSERT INTO assignment (category_id, name, description, point_value) VALUES((SELECT category_id FROM category WHERE name = ? LIMIT 1), ?, ?, ?);";
+                    String query = "INSERT INTO assignment (category_id, name, description, point_value) VALUES((SELECT category_id FROM category WHERE category.name = ? LIMIT 1), ?, ?, ?);";
                     Connection conn = makeConnection();
 
                     PreparedStatement pstmt = conn.prepareStatement(query);
