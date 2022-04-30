@@ -36,9 +36,9 @@ public class Main {
                     "jdbc:mysql://localhost:3306/school_db?useSSL=false", "student",
                     "user");
             // Do something with the Connection
-            System.out.println("[CONNECTION SUCCEEDED]");
-            System.out.println("_______________________");
-            System.out.println();
+            // System.out.println("[CONNECTION SUCCEEDED]");
+            // System.out.println("_______________________");
+            // System.out.println();
             return conn;
         } catch (SQLException ex) {
             // handle any errors
@@ -71,7 +71,7 @@ public class Main {
                     pstmt.setString(4, args[4]);
 
                     boolean ran = pstmt.execute();
-                    System.out.println("Inserted 1 record");
+                    System.out.println("Inserted 1 record (Class)");
                     conn.close();
                 } catch (Exception ex) {
                     System.out.println(ex);
@@ -274,7 +274,7 @@ public class Main {
                     pstmt.setInt(3, currentClass);
 
                     boolean ran = pstmt.execute();
-                    System.out.println("Inserted 1 record");
+                    System.out.println("Inserted 1 record (Category)");
                     conn.close();
                 } catch (Exception ex) {
                     System.out.println(ex);
@@ -349,7 +349,7 @@ public class Main {
                     pstmt.setInt(4, Integer.parseInt(args[4]));
 
                     boolean ran = pstmt.execute();
-                    System.out.println("Inserted 1 record");
+                    System.out.println("Inserted 1 record (Assignment)");
                     conn.close();
                 } catch (Exception ex) {
                     System.out.println(ex);
@@ -385,6 +385,21 @@ public class Main {
                     try {
                         boolean ran = pstmt.execute();
                         conn.close();
+
+                        System.out.println("Inserted 1 record (Student)");
+
+                        // Enroll student
+                        query = "insert into class_enrollment(class_id, student_id) values(?, ?);";
+
+                        conn = makeConnection();
+
+                        pstmt = conn.prepareStatement(query);
+                        pstmt.setInt(1, currentClass);
+                        pstmt.setInt(2, Integer.parseInt(args[2]));
+
+                        ran = pstmt.execute();
+                        conn.close();
+                        System.out.println("Inserted 1 record (Enrollment)");
 
                     } catch (Exception ex) {
                         query = "select * from student where student_id = ?;";
@@ -425,13 +440,13 @@ public class Main {
 
                             boolean ran = pstmt.execute();
 
-                            System.out.println("Updated 1 record");
+                            System.out.println("Updated 1 record (Student)");
                             conn.close();
                             System.out.println("WARNING: Student's name was changed.");
                         }
 
                         // Enroll student
-                        query = "insert into class_enrollment values(?, ?);";
+                        query = "insert into class_enrollment(class_id, student_id) values(?, ?);";
 
                         conn = makeConnection();
 
@@ -440,12 +455,10 @@ public class Main {
                         pstmt.setInt(2, Integer.parseInt(args[2]));
 
                         boolean ran = pstmt.execute();
-                        System.out.println("Inserted 1 record");
+                        System.out.println("Inserted 1 record (Enrollment)");
                         conn.close();
-
                     }
 
-                    System.out.println("Inserted 1 record");
                     conn.close();
                 } catch (Exception ex) {
                     System.out.println(ex);
@@ -464,7 +477,7 @@ public class Main {
                     pstmt.setString(2, args[1]);
 
                     boolean ran = pstmt.execute();
-                    System.out.println("Inserted 1 record");
+                    System.out.println("Inserted 1 record (Enrollment)");
                     conn.close();
                 } catch (Exception ex) {
                     System.out.println(ex);
@@ -596,7 +609,7 @@ public class Main {
                         pstmt.setString(4, args[1]);
 
                         boolean ran = pstmt.execute();
-                        System.out.println("Inserted 1 record");
+                        System.out.println("Inserted 1 record (Grade)");
                         conn.close();
 
                         // Checking to make sure we didn't award too many points
@@ -646,8 +659,58 @@ public class Main {
 
         switch (op) {
             case 2:
-                for (String string : args) {
-                    System.out.println(string);
+                try {
+                    String query = "select student.username, student.first_name, student.last_name, " +
+                            "category.name, sum(assignment_grade.points_awarded) as points, sum(assignment.point_value) as max_points "
+                            +
+                            "from assignment right join assignment_grade on assignment.assignment_id = assignment_grade.assignment_id "
+                            +
+                            "left outer join student on student.student_id = assignment_grade.student_id " +
+                            "left join category on assignment.category_id = category.category_id " +
+                            "and category.class_id = ? " +
+                            "group by category.category_id having student.username = ?;";
+
+                    Connection conn = makeConnection();
+                    PreparedStatement pstmt = conn.prepareStatement(query);
+                    pstmt.setInt(1, currentClass);
+                    pstmt.setString(2, args[1]);
+                    ResultSet res = pstmt.executeQuery();// pstmt.execute();
+
+                    int sumGrades = 0;
+                    int sumMaxGrades = 0;
+
+                    System.out.println("| Username | First Name | Last Name | Category Name | Points |");
+                    while (res.next()) {
+                        int categoryGrades = res.getInt("points");
+                        int categoryMax = res.getInt("max_points");
+
+                        sumGrades += categoryGrades;
+                        sumMaxGrades += categoryMax;
+
+                        String u_name = res.getString("student.username");
+                        String f_name = res.getString("student.first_name");
+                        String l_name = res.getString("student.last_name");
+                        String c_name = res.getString("category.name");
+
+                        System.out.println(
+                                "| " + u_name + " | " + f_name + " | " + l_name + " | " + c_name + " | "
+                                        + (categoryGrades + "/" + categoryMax) + " |");
+                    }
+
+                    float percentage = 100.0f;
+
+                    if (sumMaxGrades > 0) {
+                        percentage = ((float) sumGrades / sumMaxGrades) * 100;
+                    }
+
+                    System.out.println();
+                    System.out.println("| Total Points | % Overall |");
+                    System.out.println("| " + (sumGrades + "/" + sumMaxGrades) + " | " + percentage + "% |");
+
+                    res.close();
+                    conn.close();
+                } catch (Exception ex) {
+                    System.out.println(ex);
                 }
                 break;
             default:
