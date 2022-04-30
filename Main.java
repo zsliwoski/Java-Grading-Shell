@@ -371,13 +371,103 @@ public class Main {
 
         switch (op) {
             case 5:
-                for (String string : args) {
-                    System.out.println(string);
+                try {
+                    String query = "insert into student (username,student_id,first_name,last_name) values (?,?,?,?);";
+
+                    Connection conn = makeConnection();
+
+                    PreparedStatement pstmt = conn.prepareStatement(query);
+                    pstmt.setString(1, args[1]);
+                    pstmt.setInt(2, Integer.parseInt(args[2]));
+                    pstmt.setString(3, args[3]);
+                    pstmt.setString(4, args[4]);
+
+                    try {
+                        boolean ran = pstmt.execute();
+                        conn.close();
+
+                    } catch (Exception ex) {
+                        query = "select * from student where student_id = ?;";
+
+                        conn = makeConnection();
+                        pstmt = conn.prepareStatement(query);
+                        pstmt.setInt(1, Integer.parseInt(args[2]));
+
+                        ResultSet res = pstmt.executeQuery();// pstmt.execute();
+
+                        boolean matching = true;
+
+                        while (res.next()) {
+                            String u_name = res.getString("username");
+                            String f_name = res.getString("first_name");
+                            String l_name = res.getString("last_name");
+
+                            if (!u_name.equals(args[1]) || !f_name.equals(args[3]) || !l_name.equals(args[4])) {
+                                matching = false;
+                            }
+                        }
+                        res.close();
+                        conn.close();
+
+                        if (!matching) {
+                            // update student
+                            query = "UPDATE student " +
+                                    "SET first_name = ?, last_name = ?, username = ?" +
+                                    "WHERE student_id = ?;";
+
+                            conn = makeConnection();
+
+                            pstmt = conn.prepareStatement(query);
+                            pstmt.setString(1, args[3]);
+                            pstmt.setString(2, args[4]);
+                            pstmt.setString(3, args[1]);
+                            pstmt.setInt(4, Integer.parseInt(args[2]));
+
+                            boolean ran = pstmt.execute();
+
+                            System.out.println("Updated 1 record");
+                            conn.close();
+                            System.out.println("WARNING: Student's name was changed.");
+                        }
+
+                        // Enroll student
+                        query = "insert into class_enrollment values(?, ?);";
+
+                        conn = makeConnection();
+
+                        pstmt = conn.prepareStatement(query);
+                        pstmt.setInt(1, currentClass);
+                        pstmt.setInt(2, Integer.parseInt(args[2]));
+
+                        boolean ran = pstmt.execute();
+                        System.out.println("Inserted 1 record");
+                        conn.close();
+
+                    }
+
+                    System.out.println("Inserted 1 record");
+                    conn.close();
+                } catch (Exception ex) {
+                    System.out.println(ex);
                 }
                 break;
             case 2:
-                for (String string : args) {
-                    System.out.println(string);
+                try {
+                    String query = "insert into class_enrollment " +
+                            "set class_id = ?, " +
+                            "student_id = (select student_id from student where username = ?);";
+
+                    Connection conn = makeConnection();
+
+                    PreparedStatement pstmt = conn.prepareStatement(query);
+                    pstmt.setInt(1, currentClass);
+                    pstmt.setString(2, args[1]);
+
+                    boolean ran = pstmt.execute();
+                    System.out.println("Inserted 1 record");
+                    conn.close();
+                } catch (Exception ex) {
+                    System.out.println(ex);
                 }
                 break;
             default:
