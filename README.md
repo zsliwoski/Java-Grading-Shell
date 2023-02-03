@@ -4,7 +4,7 @@ Authors :
 - Simon Arca Costas
 
 ## Summary
-This repo contains the code for the CS-410 Final Project
+This repo contains the code for the Java-Grading-Shell
 
 A Shell application written for managing grades in a wide number of classes.
 It's written in Java for processing commands and makes use of MySQL for the access and storage of data.
