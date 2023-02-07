@@ -20,4 +20,4 @@ a MySQL exception or an error from the function.
 ## Thoughts
 There was a lot that was limiting about our implementation, we made an effort to slim down the
 amount of data that needed to be stored significantly. I think the need for so many commands
-put us under a bit of a time crunch right at the end of the semester.
+put us under a bit of a time crunch right at the end of the project.
